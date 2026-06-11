@@ -4,8 +4,9 @@
 -- analogue is @IO (Either ReadlineError String)@, so this module defines the
 -- error sum type that inhabits the @Left@.
 module Rustyline.Error
-  ( ReadlineError (..)
-  ) where
+  ( ReadlineError (..),
+  )
+where
 
 import Control.Exception (IOException)
 

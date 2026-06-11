@@ -5,14 +5,16 @@
 -- defaults, so @instance Highlighter MyType@ is a no-op highlighter, exactly
 -- like rustyline's blanket default implementations.
 module Rustyline.Highlight
-  ( Highlighter (..)
-  , MatchingBracketHighlighter (..)
+  ( Highlighter (..),
+    MatchingBracketHighlighter (..),
+
     -- * ANSI helpers
-  , dim
-  , bold
-  , withColor
-  , reset
-  ) where
+    dim,
+    bold,
+    withColor,
+    reset,
+  )
+where
 
 import Rustyline.Config (CompletionType)
 
@@ -52,7 +54,7 @@ instance Highlighter MatchingBracketHighlighter where
   highlightChar _ _ _ = True
   highlight _ line pos =
     case matchAt line pos of
-      Just j  -> emphasize line [pos', j]
+      Just j -> emphasize line [pos', j]
       Nothing -> line
     where
       -- consider the bracket just before the cursor, as rustyline does
@@ -77,28 +79,32 @@ reset = "\ESC[0m"
 -- internal: emphasise the chars at the given indices with bold
 emphasize :: String -> [Int] -> String
 emphasize line idxs =
-  concat [ if i `elem` idxs then bold [c] else [c]
-         | (i, c) <- zip [0 ..] line ]
+  concat
+    [ if i `elem` idxs then bold [c] else [c]
+    | (i, c) <- zip [0 ..] line
+    ]
 
 -- internal: if a bracket sits just before pos, find its match
 matchAt :: String -> Int -> Maybe Int
 matchAt line pos
   | i < 0 || i >= length line = Nothing
   | otherwise = case line !! i of
-      '(' -> scan 1    (i + 1) '(' ')'
-      '[' -> scan 1    (i + 1) '[' ']'
-      '{' -> scan 1    (i + 1) '{' '}'
+      '(' -> scan 1 (i + 1) '(' ')'
+      '[' -> scan 1 (i + 1) '[' ']'
+      '{' -> scan 1 (i + 1) '{' '}'
       ')' -> scan (-1) (i - 1) ')' '('
       ']' -> scan (-1) (i - 1) ']' '['
       '}' -> scan (-1) (i - 1) '}' '{'
-      _   -> Nothing
+      _ -> Nothing
   where
     i = pos - 1
     scan dir start closeChar openChar = go start (1 :: Int)
       where
         go k depth
           | k < 0 || k >= length line = Nothing
-          | line !! k == closeChar    = go (k + dir) (depth + 1)
-          | line !! k == openChar     = if depth == 1 then Just k
-                                                       else go (k + dir) (depth - 1)
-          | otherwise                 = go (k + dir) depth
+          | line !! k == closeChar = go (k + dir) (depth + 1)
+          | line !! k == openChar =
+              if depth == 1
+                then Just k
+                else go (k + dir) (depth - 1)
+          | otherwise = go (k + dir) depth

@@ -1,5 +1,5 @@
-{-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE DefaultSignatures #-}
+{-# LANGUAGE TypeFamilies #-}
 
 -- | Port of @rustyline::hint@.
 --
@@ -7,19 +7,21 @@
 -- like fish-shell autosuggestions. Mirrors rustyline's @Hinter@ trait with
 -- its associated @Hint@ type.
 module Rustyline.Hint
-  ( Hint (..)
-  , Hinter (..)
-  , HistoryHinter (..)
-  ) where
+  ( Hint (..),
+    Hinter (..),
+    HistoryHinter (..),
+  )
+where
 
+import Data.List (find, isPrefixOf)
 import Rustyline.Context (Context, historyEntries)
-import Data.List (isPrefixOf, find)
 
 -- | A hint value (rustyline's @Hint@ trait): the text to display, and
 -- optionally the text to insert if the user completes the hint.
 class Hint a where
   -- | Text displayed after the cursor.
   hintDisplay :: a -> String
+
   -- | Text to insert when the hint is accepted (e.g. via End), if any.
   hintCompletion :: a -> Maybe String
   hintCompletion _ = Nothing
@@ -33,9 +35,10 @@ instance Hint [Char] where
 --
 -- The default 'hint' returns 'Nothing', so a no-op hinter is just
 -- @instance Hinter MyType@.
-class Hint (HintOf h) => Hinter h where
+class (Hint (HintOf h)) => Hinter h where
   -- | The hint type (rustyline's associated @type Hint@).
   type HintOf h
+
   type HintOf h = String
 
   -- | @hint h line pos ctx@ optionally returns a suggestion for the line.

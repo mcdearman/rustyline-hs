@@ -1,5 +1,5 @@
-{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE BangPatterns #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 -- | Port of rustyline's terminal layer (@rustyline::tty@) for Unix.
 --
@@ -9,25 +9,25 @@
 -- assumes no automatic terminal-width line wrapping (one physical row per
 -- logical row).
 module Rustyline.Tty
-  ( withRawMode
-  , isInputTty
-  , readKey
-  , Frame (..)
-  , renderBlock
-  , moveBelowBlock
-  , putFlush
-  , beep
-  , clearScreen
-  , visibleLength
-  ) where
+  ( withRawMode,
+    isInputTty,
+    readKey,
+    Frame (..),
+    renderBlock,
+    moveBelowBlock,
+    putFlush,
+    beep,
+    clearScreen,
+    visibleLength,
+  )
+where
 
+import Control.Exception (SomeException, bracket_, catch)
+import Data.Char (chr, ord)
 import Rustyline.KeyEvent
-
 import System.IO
-import System.Posix.Terminal
 import System.Posix.IO (stdInput)
-import Control.Exception (bracket_, catch, SomeException)
-import Data.Char (ord, chr)
+import System.Posix.Terminal
 
 -- | Is standard input an interactive terminal?
 isInputTty :: IO Bool
@@ -46,23 +46,27 @@ withRawMode action = do
       bracket_
         (setTerminalAttributes stdInput new WhenFlushed)
         (setTerminalAttributes stdInput old WhenFlushed)
-        (do hSetBuffering stdin NoBuffering
+        ( do
+            hSetBuffering stdin NoBuffering
             hSetBuffering stdout NoBuffering
-            hSetEncoding  stdin utf8
-            hSetEncoding  stdout utf8
-            action)
+            hSetEncoding stdin utf8
+            hSetEncoding stdout utf8
+            action
+        )
 
 makeRaw :: TerminalAttributes -> TerminalAttributes
 makeRaw attrs =
   flip withTime 0 $
-  flip withMinInput 1 $
-  foldl withoutMode attrs
-    [ EnableEcho        -- ECHO
-    , ProcessInput      -- ICANON
-    , KeyboardInterrupts -- ISIG  (so Ctrl-C/Ctrl-D arrive as bytes)
-    , StartStopOutput   -- IXON
-    , ExtendedFunctions -- IEXTEN
-    ]
+    flip withMinInput 1 $
+      foldl
+        withoutMode
+        attrs
+        [ EnableEcho, -- ECHO
+          ProcessInput, -- ICANON
+          KeyboardInterrupts, -- ISIG  (so Ctrl-C/Ctrl-D arrive as bytes)
+          StartStopOutput, -- IXON
+          ExtendedFunctions -- IEXTEN
+        ]
 
 -- | Read and decode a single key press from standard input. May throw at
 -- end of input (callers treat that as EOF).
@@ -72,13 +76,14 @@ readKey = do
   let n = ord c
   case c of
     '\ESC' -> readEsc
-    '\r'   -> pure (key Enter)
-    '\n'   -> pure (key Enter)
-    '\t'   -> pure (key Tab)
-    '\DEL' -> pure (key Backspace)   -- 127
-    '\b'   -> pure (key Backspace)   -- 8
-    _ | n >= 1 && n <= 26 -> pure (ctrlKey (chr (n + 96)))
-      | otherwise         -> pure (key (Char c))
+    '\r' -> pure (key Enter)
+    '\n' -> pure (key Enter)
+    '\t' -> pure (key Tab)
+    '\DEL' -> pure (key Backspace) -- 127
+    '\b' -> pure (key Backspace) -- 8
+    _
+      | n >= 1 && n <= 26 -> pure (ctrlKey (chr (n + 96)))
+      | otherwise -> pure (key (Char c))
 
 -- after ESC: distinguish bare Esc, CSI/SS3 sequences, and Alt+key
 readEsc :: IO KeyEvent
@@ -91,7 +96,7 @@ readEsc = do
       case c of
         '[' -> readCSI
         'O' -> readSS3
-        _   -> pure (KeyEvent (Char c) alt)   -- Alt + key
+        _ -> pure (KeyEvent (Char c) alt) -- Alt + key
 
 readCSI :: IO KeyEvent
 readCSI = do
@@ -103,16 +108,18 @@ readCSI = do
     'D' -> pure (key LeftArrow)
     'H' -> pure (key Home)
     'F' -> pure (key End)
-    d | d `elem` ['0'..'9'] -> readTilde [d]
-      | otherwise           -> pure (key Null)
+    d
+      | d `elem` ['0' .. '9'] -> readTilde [d]
+      | otherwise -> pure (key Null)
 
 readTilde :: String -> IO KeyEvent
 readTilde ds = do
   c <- hGetChar stdin
   case c of
     '~' -> pure (tildeKey ds)
-    d | d `elem` ['0'..'9'] -> readTilde (ds ++ [d])
-      | otherwise           -> pure (key Null)
+    d
+      | d `elem` ['0' .. '9'] -> readTilde (ds ++ [d])
+      | otherwise -> pure (key Null)
 
 tildeKey :: String -> KeyEvent
 tildeKey ds = case ds of
@@ -123,7 +130,7 @@ tildeKey ds = case ds of
   "3" -> key Delete
   "5" -> key PageUp
   "6" -> key PageDown
-  _   -> key Null
+  _ -> key Null
 
 readSS3 :: IO KeyEvent
 readSS3 = do
@@ -135,20 +142,27 @@ readSS3 = do
     'D' -> key LeftArrow
     'H' -> key Home
     'F' -> key End
-    _   -> key Null
+    _ -> key Null
 
 -- | Everything needed to paint one line.
 -- | Everything needed to repaint one editing frame. The line text may span
 -- several physical rows via embedded @\\n@ characters.
 data Frame = Frame
-  { fPrompt    :: String  -- ^ Prompt text (already styled).
-  , fPromptLen :: Int     -- ^ Visible width of the prompt.
-  , fStyled    :: String  -- ^ Line text to print (already styled; keeps @\\n@).
-  , fRaw       :: String  -- ^ Unstyled line text, used for cursor layout math.
-  , fHint      :: String  -- ^ Trailing hint (already styled, no @\\n@), or "".
-  , fCursor    :: Int     -- ^ Cursor char index into 'fRaw'.
-  , fOldRow    :: Int     -- ^ Cursor's row offset from the block top on the
-                          --   previous frame (0 on the first frame).
+  { -- | Prompt text (already styled).
+    fPrompt :: String,
+    -- | Visible width of the prompt.
+    fPromptLen :: Int,
+    -- | Line text to print (already styled; keeps @\\n@).
+    fStyled :: String,
+    -- | Unstyled line text, used for cursor layout math.
+    fRaw :: String,
+    -- | Trailing hint (already styled, no @\\n@), or "".
+    fHint :: String,
+    -- | Cursor char index into 'fRaw'.
+    fCursor :: Int,
+    -- | Cursor's row offset from the block top on the
+    --   previous frame (0 on the first frame).
+    fOldRow :: Int
   }
 
 -- | Repaint the whole multi-line block in place and position the cursor by row
@@ -161,18 +175,19 @@ data Frame = Frame
 -- at column 0), then move the cursor up\/left to its logical position.
 renderBlock :: Frame -> IO Int
 renderBlock f = do
-  let raw    = fRaw f
-      pos    = max 0 (min (length raw) (fCursor f))
+  let raw = fRaw f
+      pos = max 0 (min (length raw) (fCursor f))
       before = take pos raw
-      crow   = countNL before
-      ccol   = (if crow == 0 then fPromptLen f else 0)
-                 + length (afterLastNL before)
+      crow = countNL before
+      ccol =
+        (if crow == 0 then fPromptLen f else 0)
+          + length (afterLastNL before)
       endRow = countNL raw
-      up0      = if fOldRow f > 0 then csi (fOldRow f) 'A' else ""
-      clearTop = "\r\ESC[J"                       -- col 0, clear to end of screen
-      body     = fPrompt f ++ nlToCRLF (fStyled f) ++ fHint f
-      backUp   = if endRow > crow then csi (endRow - crow) 'A' else ""
-      toCol    = "\r" ++ (if ccol > 0 then csi ccol 'C' else "")
+      up0 = if fOldRow f > 0 then csi (fOldRow f) 'A' else ""
+      clearTop = "\r\ESC[J" -- col 0, clear to end of screen
+      body = fPrompt f ++ nlToCRLF (fStyled f) ++ fHint f
+      backUp = if endRow > crow then csi (endRow - crow) 'A' else ""
+      toCol = "\r" ++ (if ccol > 0 then csi ccol 'C' else "")
   putFlush (up0 ++ clearTop ++ body ++ backUp ++ toCol)
   pure crow
 
@@ -215,5 +230,5 @@ visibleLength = go 0
     go !acc ('\ESC' : '[' : rest) = go acc (dropSGR rest)
     go !acc (_ : rest) = go (acc + 1) rest
     dropSGR ('m' : rest) = rest
-    dropSGR (_   : rest) = dropSGR rest
-    dropSGR []           = []
+    dropSGR (_ : rest) = dropSGR rest
+    dropSGR [] = []

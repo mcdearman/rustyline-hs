@@ -38,39 +38,50 @@
 -- * @Result<String, ReadlineError>@ → @'Either' 'ReadlineError' 'String'@.
 module Rustyline
   ( -- * The editor
-    module Rustyline.Editor
-    -- * Configuration
-  , module Rustyline.Config
-    -- * Errors
-  , module Rustyline.Error
-    -- * Keys and commands
-  , module Rustyline.KeyEvent
-  , module Rustyline.Command
-    -- * Helper traits
-  , module Rustyline.Completion
-  , module Rustyline.Hint
-  , module Rustyline.Highlight
-  , module Rustyline.Validate
-  , module Rustyline.Helper
-  , module Rustyline.Context
-    -- * History
-  , History
-  , emptyHistory
-  , getEntry
-  , fromList
-  , toList
-  ) where
+    module Rustyline.Editor,
 
-import Rustyline.Editor
-import Rustyline.Config
-import Rustyline.Error
-import Rustyline.KeyEvent
+    -- * Configuration
+    module Rustyline.Config,
+
+    -- * Errors
+    module Rustyline.Error,
+
+    -- * Keys and commands
+    module Rustyline.KeyEvent,
+    module Rustyline.Command,
+
+    -- * Helper traits
+    module Rustyline.Completion,
+    module Rustyline.Hint,
+    module Rustyline.Highlight,
+    module Rustyline.Validate,
+    module Rustyline.Helper,
+    module Rustyline.Context,
+
+    -- * History
+    History,
+    emptyHistory,
+    getEntry,
+    fromList,
+    toList,
+  )
+where
+
 import Rustyline.Command
 import Rustyline.Completion
-import Rustyline.Hint
-import Rustyline.Highlight
-import Rustyline.Validate
-import Rustyline.Helper
+import Rustyline.Config
 import Rustyline.Context
+import Rustyline.Editor
+import Rustyline.Error
+import Rustyline.Helper
+import Rustyline.Highlight
+import Rustyline.Hint
 import Rustyline.History
-  ( History, emptyHistory, getEntry, fromList, toList )
+  ( History,
+    emptyHistory,
+    fromList,
+    getEntry,
+    toList,
+  )
+import Rustyline.KeyEvent
+import Rustyline.Validate

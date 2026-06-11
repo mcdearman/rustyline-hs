@@ -4,42 +4,48 @@
 -- independently of any terminal. Positions are character indices into the
 -- line. Every operation returns a new 'LineBuffer'.
 module Rustyline.LineBuffer
-  ( LineBuffer (..)
-  , empty
-  , fromString
-  , asString
-  , setLine
+  ( LineBuffer (..),
+    empty,
+    fromString,
+    asString,
+    setLine,
+
     -- * Queries
-  , bufLen
-  , atStart
-  , atEnd
+    bufLen,
+    atStart,
+    atEnd,
+
     -- * Editing
-  , insertChar
-  , insertStr
-  , backspace
-  , deleteChar
-  , transpose
+    insertChar,
+    insertStr,
+    backspace,
+    deleteChar,
+    transpose,
+
     -- * Movement
-  , moveLeft
-  , moveRight
-  , moveHome
-  , moveEnd
-  , moveBackwardWord
-  , moveForwardWord
+    moveLeft,
+    moveRight,
+    moveHome,
+    moveEnd,
+    moveBackwardWord,
+    moveForwardWord,
+
     -- * Killing
-  , killToEnd
-  , killToHome
-  , killWordBackward
-  , killWordForward
-  ) where
+    killToEnd,
+    killToHome,
+    killWordBackward,
+    killWordForward,
+  )
+where
 
 import Data.Char (isSpace)
 
 -- | A line of text plus a cursor. @lbPos@ is a char index in @0 .. length@.
 data LineBuffer = LineBuffer
-  { lbText :: !String
-  , lbPos  :: !Int
-  } deriving (Eq, Show)
+  { lbText :: !String,
+    lbPos :: !Int
+  }
+  deriving (Eq, Show)
 
 -- | An empty buffer.
 empty :: LineBuffer
@@ -82,29 +88,30 @@ insertStr s (LineBuffer t p) =
 -- | Delete the char before the cursor (Backspace).
 backspace :: LineBuffer -> LineBuffer
 backspace b@(LineBuffer t p)
-  | p <= 0    = b
-  | otherwise = let (l, r) = splitAt p t
-                in LineBuffer (init l ++ r) (p - 1)
+  | p <= 0 = b
+  | otherwise =
+      let (l, r) = splitAt p t
+       in LineBuffer (init l ++ r) (p - 1)
 
 -- | Delete the char under the cursor.
 deleteChar :: LineBuffer -> LineBuffer
 deleteChar b@(LineBuffer t p)
   | p >= length t = b
-  | otherwise     = let (l, r) = splitAt p t in LineBuffer (l ++ drop 1 r) p
+  | otherwise = let (l, r) = splitAt p t in LineBuffer (l ++ drop 1 r) p
 
 -- | Swap the two characters around the cursor (Ctrl-T).
 transpose :: LineBuffer -> LineBuffer
 transpose b@(LineBuffer t p)
   | length t < 2 = b
-  | p <= 0       = b
+  | p <= 0 = b
   | otherwise =
-      let q = min p (length t - 1)         -- cursor at end: swap last two
+      let q = min p (length t - 1) -- cursor at end: swap last two
           xs = t
           a = xs !! (q - 1)
           c = xs !! q
-          pre  = take (q - 1) xs
+          pre = take (q - 1) xs
           post = drop (q + 1) xs
-      in LineBuffer (pre ++ [c, a] ++ post) (min (q + 1) (length t))
+       in LineBuffer (pre ++ [c, a] ++ post) (min (q + 1) (length t))
 
 moveLeft :: LineBuffer -> LineBuffer
 moveLeft (LineBuffer t p) = LineBuffer t (max 0 (p - 1))
@@ -139,39 +146,39 @@ killWordBackward :: LineBuffer -> LineBuffer
 killWordBackward (LineBuffer t p) =
   let start = prevWord t p
       (l, r) = splitAt start t
-  in LineBuffer (l ++ drop (p - start) r) start
+   in LineBuffer (l ++ drop (p - start) r) start
 
 -- | Delete the word after the cursor (Alt-D).
 killWordForward :: LineBuffer -> LineBuffer
 killWordForward (LineBuffer t p) =
   let end = nextWord t p
       (l, r) = splitAt p t
-  in LineBuffer (l ++ drop (end - p) r) p
+   in LineBuffer (l ++ drop (end - p) r) p
 
 -- internal word-boundary scanning (whitespace-delimited)
 
 prevWord :: String -> Int -> Int
 prevWord t p =
-  let i  = skipWhile isSpace (p - 1) (-1)
-      j  = skipWhile (not . isSpace) i (-1)
-  in j + 1
+  let i = skipWhile isSpace (p - 1) (-1)
+      j = skipWhile (not . isSpace) i (-1)
+   in j + 1
   where
     skipWhile pr = go
       where
         go k step
           | k < 0 || k >= length t = k
-          | pr (t !! k)            = go (k + step) step
-          | otherwise              = k
+          | pr (t !! k) = go (k + step) step
+          | otherwise = k
 
 nextWord :: String -> Int -> Int
 nextWord t p =
   let i = skipWhile isSpace p 1
       j = skipWhile (not . isSpace) i 1
-  in j
+   in j
   where
     skipWhile pr = go
       where
         go k step
           | k < 0 || k >= length t = k
-          | pr (t !! k)            = go (k + step) step
-          | otherwise              = k
+          | pr (t !! k) = go (k + step) step
+          | otherwise = k

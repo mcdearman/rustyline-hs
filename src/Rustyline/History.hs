@@ -4,34 +4,35 @@
 -- provide the concrete default history (the one nearly everyone uses) as a
 -- plain value, plus file load\/save. Entries are stored oldest-first.
 module Rustyline.History
-  ( History
-  , emptyHistory
-  , addEntry
-  , getEntry
-  , len
-  , isEmpty
-  , clearHistory
-  , toList
-  , fromList
-  , saveTo
-  , loadFrom
-  , appendTo
-  ) where
-
-import Rustyline.Config
-  ( Config (maxHistorySize, historyDuplicates, historyIgnoreSpace)
-  , HistoryDuplicates (..)
+  ( History,
+    emptyHistory,
+    addEntry,
+    getEntry,
+    len,
+    isEmpty,
+    clearHistory,
+    toList,
+    fromList,
+    saveTo,
+    loadFrom,
+    appendTo,
   )
-import qualified Data.Sequence as Seq
-import Data.Sequence (Seq, (|>))
-import qualified Data.Foldable as F
+where
+
 import Data.Char (isSpace)
+import qualified Data.Foldable as F
+import Data.Sequence (Seq, (|>))
+import qualified Data.Sequence as Seq
+import Rustyline.Config
+  ( Config (historyDuplicates, historyIgnoreSpace, maxHistorySize),
+    HistoryDuplicates (..),
+  )
 import System.Directory (doesFileExist)
 
 -- | A bounded history of input lines, oldest-first.
 data History = History
-  { histSeq :: !(Seq String)
-  , histMax :: !Int
+  { histSeq :: !(Seq String),
+    histMax :: !Int
   }
 
 -- | An empty history sized from the 'Config'.
@@ -62,26 +63,30 @@ fromList cfg = foldl (\h s -> fst (addEntry cfg s h)) (emptyHistory cfg)
 -- @history_ignore_space@, @history_ignore_dups@ and @max_history_size@.
 addEntry :: Config -> String -> History -> (History, Bool)
 addEntry cfg line h
-  | ignoreSpace, leadingSpace        = (h, False)
-  | null line                        = (h, False)
-  | dropDup, lastEntry == Just line  = (h, False)
-  | otherwise                        = (trimmed, True)
+  | ignoreSpace, leadingSpace = (h, False)
+  | null line = (h, False)
+  | dropDup, lastEntry == Just line = (h, False)
+  | otherwise = (trimmed, True)
   where
-    ignoreSpace  = historyIgnoreSpace cfg
-    leadingSpace = case line of (c:_) -> isSpace c; _ -> False
-    dropDup      = historyDuplicates cfg == IgnoreConsecutive
-    lastEntry    = case Seq.viewr (histSeq h) of
-                     _ Seq.:> x -> Just x
-                     Seq.EmptyR -> Nothing
-    appended     = histSeq h |> line
-    overflow     = Seq.length appended - histMax h
-    trimmed      = h { histSeq = if overflow > 0
-                                   then Seq.drop overflow appended
-                                   else appended }
+    ignoreSpace = historyIgnoreSpace cfg
+    leadingSpace = case line of (c : _) -> isSpace c; _ -> False
+    dropDup = historyDuplicates cfg == IgnoreConsecutive
+    lastEntry = case Seq.viewr (histSeq h) of
+      _ Seq.:> x -> Just x
+      Seq.EmptyR -> Nothing
+    appended = histSeq h |> line
+    overflow = Seq.length appended - histMax h
+    trimmed =
+      h
+        { histSeq =
+            if overflow > 0
+              then Seq.drop overflow appended
+              else appended
+        }
 
 -- | Remove all entries.
 clearHistory :: History -> History
-clearHistory h = h { histSeq = Seq.empty }
+clearHistory h = h {histSeq = Seq.empty}
 
 -- | Write history to a file, one entry per line (rustyline @save_history@).
 saveTo :: FilePath -> History -> IO ()

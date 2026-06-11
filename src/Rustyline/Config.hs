@@ -11,24 +11,26 @@
 -- cfg = defaultConfig { maxHistorySize = 50, editMode = Emacs }
 -- @
 module Rustyline.Config
-  ( Config (..)
-  , defaultConfig
-  , EditMode (..)
-  , CompletionType (..)
-  , HistoryDuplicates (..)
-  , BellStyle (..)
-  , ColorMode (..)
+  ( Config (..),
+    defaultConfig,
+    EditMode (..),
+    CompletionType (..),
+    HistoryDuplicates (..),
+    BellStyle (..),
+    ColorMode (..),
+
     -- * Builder-style combinators
-  , setMaxHistorySize
-  , setHistoryIgnoreSpace
-  , setHistoryDuplicates
-  , setCompletionType
-  , setEditMode
-  , setAutoAddHistory
-  , setBellStyle
-  , setColorMode
-  , (&)
-  ) where
+    setMaxHistorySize,
+    setHistoryIgnoreSpace,
+    setHistoryDuplicates,
+    setCompletionType,
+    setEditMode,
+    setAutoAddHistory,
+    setBellStyle,
+    setColorMode,
+    (&),
+  )
+where
 
 import Data.Function ((&))
 
@@ -38,14 +40,18 @@ data EditMode = Emacs | Vi
 
 -- | How completion candidates are presented (rustyline @CompletionType@).
 data CompletionType
-  = Circular  -- ^ Cycle through candidates on repeated Tab (rustyline default).
-  | List      -- ^ List all candidates at once.
+  = -- | Cycle through candidates on repeated Tab (rustyline default).
+    Circular
+  | -- | List all candidates at once.
+    List
   deriving (Eq, Show)
 
 -- | History de-duplication policy (rustyline @HistoryDuplicates@).
 data HistoryDuplicates
-  = AlwaysAdd          -- ^ Always add new entries.
-  | IgnoreConsecutive  -- ^ Drop an entry equal to the previous one.
+  = -- | Always add new entries.
+    AlwaysAdd
+  | -- | Drop an entry equal to the previous one.
+    IgnoreConsecutive
   deriving (Eq, Show)
 
 -- | Audible/visible bell behaviour (rustyline @BellStyle@).
@@ -58,53 +64,65 @@ data ColorMode = Enabled | Forced | Disabled
 
 -- | The editor configuration. Field names follow rustyline's builder methods.
 data Config = Config
-  { maxHistorySize     :: !Int                -- ^ @max_history_size@
-  , historyDuplicates  :: !HistoryDuplicates  -- ^ @history_ignore_dups@
-  , historyIgnoreSpace :: !Bool               -- ^ @history_ignore_space@
-  , completionType     :: !CompletionType     -- ^ @completion_type@
-  , completionPromptLimit :: !Int             -- ^ @completion_prompt_limit@
-  , editMode           :: !EditMode           -- ^ @edit_mode@
-  , autoAddHistory     :: !Bool               -- ^ @auto_add_history@
-  , bellStyle          :: !BellStyle          -- ^ @bell_style@
-  , colorMode          :: !ColorMode          -- ^ @color_mode@
-  , tabStop            :: !Int                 -- ^ @tab_stop@
-  } deriving (Eq, Show)
+  { -- | @max_history_size@
+    maxHistorySize :: !Int,
+    -- | @history_ignore_dups@
+    historyDuplicates :: !HistoryDuplicates,
+    -- | @history_ignore_space@
+    historyIgnoreSpace :: !Bool,
+    -- | @completion_type@
+    completionType :: !CompletionType,
+    -- | @completion_prompt_limit@
+    completionPromptLimit :: !Int,
+    -- | @edit_mode@
+    editMode :: !EditMode,
+    -- | @auto_add_history@
+    autoAddHistory :: !Bool,
+    -- | @bell_style@
+    bellStyle :: !BellStyle,
+    -- | @color_mode@
+    colorMode :: !ColorMode,
+    -- | @tab_stop@
+    tabStop :: !Int
+  }
+  deriving (Eq, Show)
 
 -- | rustyline's @Config::default()@.
 defaultConfig :: Config
-defaultConfig = Config
-  { maxHistorySize        = 100
-  , historyDuplicates     = IgnoreConsecutive
-  , historyIgnoreSpace    = False
-  , completionType        = Circular
-  , completionPromptLimit = 100
-  , editMode              = Emacs
-  , autoAddHistory        = False
-  , bellStyle             = AudibleBell
-  , colorMode             = Enabled
-  , tabStop               = 8
-  }
+defaultConfig =
+  Config
+    { maxHistorySize = 100,
+      historyDuplicates = IgnoreConsecutive,
+      historyIgnoreSpace = False,
+      completionType = Circular,
+      completionPromptLimit = 100,
+      editMode = Emacs,
+      autoAddHistory = False,
+      bellStyle = AudibleBell,
+      colorMode = Enabled,
+      tabStop = 8
+    }
 
 setMaxHistorySize :: Int -> Config -> Config
-setMaxHistorySize n c = c { maxHistorySize = n }
+setMaxHistorySize n c = c {maxHistorySize = n}
 
 setHistoryIgnoreSpace :: Bool -> Config -> Config
-setHistoryIgnoreSpace b c = c { historyIgnoreSpace = b }
+setHistoryIgnoreSpace b c = c {historyIgnoreSpace = b}
 
 setHistoryDuplicates :: HistoryDuplicates -> Config -> Config
-setHistoryDuplicates d c = c { historyDuplicates = d }
+setHistoryDuplicates d c = c {historyDuplicates = d}
 
 setCompletionType :: CompletionType -> Config -> Config
-setCompletionType t c = c { completionType = t }
+setCompletionType t c = c {completionType = t}
 
 setEditMode :: EditMode -> Config -> Config
-setEditMode m c = c { editMode = m }
+setEditMode m c = c {editMode = m}
 
 setAutoAddHistory :: Bool -> Config -> Config
-setAutoAddHistory b c = c { autoAddHistory = b }
+setAutoAddHistory b c = c {autoAddHistory = b}
 
 setBellStyle :: BellStyle -> Config -> Config
-setBellStyle s c = c { bellStyle = s }
+setBellStyle s c = c {bellStyle = s}
 
 setColorMode :: ColorMode -> Config -> Config
-setColorMode m c = c { colorMode = m }
+setColorMode m c = c {colorMode = m}

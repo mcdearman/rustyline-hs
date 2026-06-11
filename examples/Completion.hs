@@ -17,9 +17,11 @@ instance Completer FileHelper where
   -- which is also our default CandidateOf, so the types line up)
   complete _ = complete FilenameCompleter
 
-instance Hinter      FileHelper   -- default: no hints
-instance Highlighter FileHelper   -- default: no highlighting
-instance Validator   FileHelper   -- default: always Valid
+instance Hinter FileHelper -- default: no hints
+
+instance Highlighter FileHelper -- default: no highlighting
+
+instance Validator FileHelper -- default: always Valid
 
 main :: IO ()
 main = do
@@ -31,7 +33,7 @@ main = do
     loop ed = do
       r <- readline ed "path> "
       case r of
-        Right line       -> putStrLn ("You chose: " ++ line) >> loop ed
+        Right line -> putStrLn ("You chose: " ++ line) >> loop ed
         Left Interrupted -> putStrLn "CTRL-C"
-        Left Eof         -> putStrLn "CTRL-D"
-        Left err         -> putStrLn ("Error: " ++ show err)
+        Left Eof -> putStrLn "CTRL-D"
+        Left err -> putStrLn ("Error: " ++ show err)

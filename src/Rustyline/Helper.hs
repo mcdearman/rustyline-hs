@@ -8,12 +8,13 @@
 -- is a class with those four as superclasses; any type implementing all four
 -- gets a free 'Helper' instance via the blanket instance below.
 module Rustyline.Helper
-  ( Helper
-  ) where
+  ( Helper,
+  )
+where
 
 import Rustyline.Completion (Completer)
-import Rustyline.Hint (Hinter)
 import Rustyline.Highlight (Highlighter)
+import Rustyline.Hint (Hinter)
 import Rustyline.Validate (Validator)
 
 -- | The composite constraint a custom helper must satisfy. Implement the four

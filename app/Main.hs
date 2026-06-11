@@ -6,28 +6,28 @@
 -- validator, driven by a 'readline' loop that records history.
 module Main (main) where
 
-import Rustyline
-
-import Data.List (isPrefixOf, nub)
 import Control.Monad (unless)
+import Data.List (isPrefixOf, nub)
+import Rustyline
 
 -- | Our helper bundles the four behaviours. Because of the blanket
 -- @instance (Completer h, Hinter h, Highlighter h, Validator h) => Helper h@,
 -- giving the four instances below is enough to make @MyHelper@ a 'Helper'.
 data MyHelper = MyHelper
-  { keywords :: [String]
-  , hinter   :: HistoryHinter        -- ^ reused from the library
+  { keywords :: [String],
+    -- | reused from the library
+    hinter :: HistoryHinter
   }
 
 -- | Complete the word under the cursor against a fixed keyword list,
 -- returning display\/replacement 'Pair's (the default candidate type).
 instance Completer MyHelper where
   complete h line pos _ctx = do
-    let before      = take pos line
-        wordStart   = length before - length (reverse (takeWhile (/= ' ') (reverse before)))
-        word        = drop wordStart before
-        matches     = filter (word `isPrefixOf`) (keywords h)
-        candidates  = [ Pair w (w ++ " ") | w <- matches ]
+    let before = take pos line
+        wordStart = length before - length (reverse (takeWhile (/= ' ') (reverse before)))
+        word = drop wordStart before
+        matches = filter (word `isPrefixOf`) (keywords h)
+        candidates = [Pair w (w ++ " ") | w <- matches]
     pure (wordStart, candidates)
 
 -- | Delegate hinting to the library's 'HistoryHinter'.
@@ -56,15 +56,15 @@ main = do
     loop ed = do
       r <- readline ed "\x1b[32m\xBB\x1b[0m "
       case r of
-        Left Eof         -> putStrLn "<EOF>"
+        Left Eof -> putStrLn "<EOF>"
         Left Interrupted -> putStrLn "<Ctrl-C>"
-        Left err         -> putStrLn ("error: " ++ show err)
-        Right line       -> do
+        Left err -> putStrLn ("error: " ++ show err)
+        Right line -> do
           unless (null line) $ do
             _ <- addHistoryEntry ed line
             pure ()
           case line of
             "exit" -> putStrLn "bye"
-            _      -> do
+            _ -> do
               putStrLn ("Line: " ++ line)
               loop ed

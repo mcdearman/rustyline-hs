@@ -1,22 +1,24 @@
 -- | Port of rustyline's key types (@rustyline::keys@): 'KeyCode',
 -- 'Modifiers' and 'KeyEvent'.
 module Rustyline.KeyEvent
-  ( KeyCode (..)
-  , Modifiers (..)
-  , KeyEvent (..)
-  , noMod
-  , ctrl
-  , alt
-  , key
-  , ctrlKey
-  , altKey
-  ) where
+  ( KeyCode (..),
+    Modifiers (..),
+    KeyEvent (..),
+    noMod,
+    ctrl,
+    alt,
+    key,
+    ctrlKey,
+    altKey,
+  )
+where
 
 import Data.Bits ((.|.))
 
 -- | A physical key, independent of modifiers.
 data KeyCode
-  = Char Char        -- ^ A printable character.
+  = -- | A printable character.
+    Char Char
   | Enter
   | Tab
   | Backspace
@@ -30,21 +32,24 @@ data KeyCode
   | DownArrow
   | PageUp
   | PageDown
-  | Null              -- ^ An unrecognised\/empty key.
+  | -- | An unrecognised\/empty key.
+    Null
   deriving (Eq, Ord, Show)
 
 -- | Active modifier keys. Mirrors the bit-flag @Modifiers@ struct in
 -- rustyline (here a simple record, with a 'Monoid' to combine them).
 data Modifiers = Modifiers
-  { modCtrl  :: !Bool
-  , modAlt   :: !Bool
-  , modShift :: !Bool
-  } deriving (Eq, Ord, Show)
+  { modCtrl :: !Bool,
+    modAlt :: !Bool,
+    modShift :: !Bool
+  }
+  deriving (Eq, Ord, Show)
 
 instance Semigroup Modifiers where
   Modifiers a b c <> Modifiers d e f =
     Modifiers (a .|. d) (b .|. e) (c .|. f)
-    where (.|.) = (||)
+    where
+      (.|.) = (||)
 
 instance Monoid Modifiers where
   mempty = noMod
@@ -55,11 +60,11 @@ noMod = Modifiers False False False
 
 -- | The Control modifier.
 ctrl :: Modifiers
-ctrl = noMod { modCtrl = True }
+ctrl = noMod {modCtrl = True}
 
 -- | The Alt\/Meta modifier.
 alt :: Modifiers
-alt = noMod { modAlt = True }
+alt = noMod {modAlt = True}
 
 -- | A key press: a 'KeyCode' plus its 'Modifiers'.
 -- Equivalent to rustyline's @KeyEvent(KeyCode, Modifiers)@.

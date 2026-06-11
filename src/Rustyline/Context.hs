@@ -2,16 +2,19 @@
 -- 'Rustyline.Completion.Completer', 'Rustyline.Hint.Hinter' and
 -- 'Rustyline.Validate.Validator' so they can consult history and the cursor.
 module Rustyline.Context
-  ( Context (..)
-  , historyEntries
-  , cursorPos
-  ) where
+  ( Context (..),
+    historyEntries,
+    cursorPos,
+  )
+where
 
 -- | Read-only context. In rustyline this borrows the history; here it carries
 -- an immutable snapshot, which is enough for completion\/hinting.
 data Context = Context
-  { ctxHistory :: [String]  -- ^ History snapshot, oldest first.
-  , ctxPos     :: !Int      -- ^ Cursor position (char index) in the line.
+  { -- | History snapshot, oldest first.
+    ctxHistory :: [String],
+    -- | Cursor position (char index) in the line.
+    ctxPos :: !Int
   }
 
 -- | The history entries visible to the helper.

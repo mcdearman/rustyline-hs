@@ -4,10 +4,11 @@
 -- The default Emacs key map maps keys to these; you can override bindings
 -- with 'Rustyline.Editor.bindSequence'.
 module Rustyline.Command
-  ( Cmd (..)
-  , Movement (..)
-  , Anchor (..)
-  ) where
+  ( Cmd (..),
+    Movement (..),
+    Anchor (..),
+  )
+where
 
 -- | Where a kill\/move acts relative to the cursor.
 data Anchor = Forward | Backward
@@ -24,18 +25,32 @@ data Movement
 -- | An editing command. This is a representative subset of rustyline's
 -- @Cmd@ enum covering the Emacs key map.
 data Cmd
-  = SelfInsert Char          -- ^ Insert a character (rustyline: @SelfInsert@).
-  | Move Movement            -- ^ Move the cursor.
-  | Kill Movement            -- ^ Delete text in the given direction\/extent.
-  | BackwardDeleteChar       -- ^ Delete the char before the cursor (Backspace).
-  | DeleteChar               -- ^ Delete the char under the cursor.
-  | TransposeChars           -- ^ Swap the two chars around the cursor (Ctrl-T).
-  | PreviousHistory          -- ^ Recall the previous history entry.
-  | NextHistory              -- ^ Recall the next history entry.
-  | AcceptLine               -- ^ Finish editing and return the line (Enter).
-  | Interrupt                -- ^ Ctrl-C — abort with 'Rustyline.Error.Interrupted'.
-  | EndOfFile                -- ^ Ctrl-D on empty line — 'Rustyline.Error.Eof'.
-  | Complete                 -- ^ Trigger completion (Tab).
-  | ClearScreen              -- ^ Clear the screen (Ctrl-L).
-  | Noop                     -- ^ Do nothing.
+  = -- | Insert a character (rustyline: @SelfInsert@).
+    SelfInsert Char
+  | -- | Move the cursor.
+    Move Movement
+  | -- | Delete text in the given direction\/extent.
+    Kill Movement
+  | -- | Delete the char before the cursor (Backspace).
+    BackwardDeleteChar
+  | -- | Delete the char under the cursor.
+    DeleteChar
+  | -- | Swap the two chars around the cursor (Ctrl-T).
+    TransposeChars
+  | -- | Recall the previous history entry.
+    PreviousHistory
+  | -- | Recall the next history entry.
+    NextHistory
+  | -- | Finish editing and return the line (Enter).
+    AcceptLine
+  | -- | Ctrl-C — abort with 'Rustyline.Error.Interrupted'.
+    Interrupt
+  | -- | Ctrl-D on empty line — 'Rustyline.Error.Eof'.
+    EndOfFile
+  | -- | Trigger completion (Tab).
+    Complete
+  | -- | Clear the screen (Ctrl-L).
+    ClearScreen
+  | -- | Do nothing.
+    Noop
   deriving (Eq, Show)
