@@ -1,0 +1,104 @@
+cabal-version:      3.0
+name:               rustyline-hs
+version:            0.1.0
+synopsis:           A Haskell port of the rustyline line-editing API.
+description:
+  A faithful port of the public API of the Rust @rustyline@ crate: an
+  @Editor@ built from a @Config@ and an optional @Helper@ that bundles a
+  completer, hinter, highlighter and validator. Includes a pure, testable
+  line-buffer core and a Unix\/Emacs terminal backend.
+  .
+  Scope is a documented subset: Unix only (termios), Emacs key bindings,
+  single visual line refresh. No Vi mode, Windows console, or bracketed paste.
+license:            MIT
+author:             rustyline-hs
+build-type:         Simple
+extra-source-files: README.md
+
+common warnings
+  ghc-options: -Wall -Wno-simplifiable-class-constraints
+
+flag examples
+  description: Build the bundled example programs in examples/.
+  default:     False
+  manual:      True
+
+-- Settings shared by every example executable.
+common example-common
+  import:           warnings
+  hs-source-dirs:   examples
+  default-language: Haskell2010
+  build-depends:    base, rustyline-hs, directory
+
+library
+  import:           warnings
+  hs-source-dirs:   src
+  default-language: Haskell2010
+  default-extensions:
+    FlexibleContexts
+    FlexibleInstances
+    MultiParamTypeClasses
+    RankNTypes
+    ScopedTypeVariables
+    TypeFamilies
+    UndecidableInstances
+    ScopedTypeVariables
+  build-depends:
+      base       >=4.14 && <5
+    , containers
+    , directory
+    , filepath
+    , unix
+  exposed-modules:
+      Rustyline
+      Rustyline.Editor
+      Rustyline.Config
+      Rustyline.Error
+      Rustyline.KeyEvent
+      Rustyline.Command
+      Rustyline.Context
+      Rustyline.Completion
+      Rustyline.Hint
+      Rustyline.Highlight
+      Rustyline.Validate
+      Rustyline.Helper
+      Rustyline.History
+      Rustyline.LineBuffer
+      Rustyline.Tty
+
+executable rustyline-hs-example
+  import:           warnings
+  hs-source-dirs:   app
+  main-is:          Main.hs
+  default-language: Haskell2010
+  build-depends:    base, rustyline-hs
+
+test-suite spec
+  import:           warnings
+  type:             exitcode-stdio-1.0
+  hs-source-dirs:   test
+  main-is:          Spec.hs
+  default-language: Haskell2010
+  build-depends:    base, rustyline-hs
+
+
+-- The Idyll REPL translated from Rust (custom Validator + history).
+executable rl-repl
+  import:  example-common
+  main-is: Repl.hs
+  if !flag(examples)
+    buildable: False
+
+-- Tab completion of filenames via FilenameCompleter.
+executable rl-completion
+  import:  example-common
+  main-is: Completion.hs
+  if !flag(examples)
+    buildable: False
+
+-- Multi-line input gated by bracket balance via MatchingBracketValidator.
+executable rl-validation
+  import:  example-common
+  main-is: Validation.hs
+  if !flag(examples)
+    buildable: False
